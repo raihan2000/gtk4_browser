@@ -20,37 +20,54 @@ class MyApp(Adw.Application):
   def on_activate(self, app):
       self.win = Gtk.ApplicationWindow(application=app)
 
+      ##Create Widgets for Header
+      self.tab_btn = Gtk.Button(label="Tab")
+      self.refresh_btn = Gtk.Button(label="Refresh")
+      self.back_btn = Gtk.Button(label="Back")
+      self.forward_btn = Gtk.Button(label="Forward")
+      self.search = Gtk.SearchEntry()
+      self.info_btn = Gtk.MenuButton()
+
+      ##Add Header
       self.header = Gtk.HeaderBar()
       self.win.set_titlebar(self.header)
 
-      self.search = Gtk.SearchEntry()
-
-      self.search.connect("activate", self.on_search)
-
-      #Menu
+      ##Info Menu
       self.action = Gio.SimpleAction.new("something", None)
-      self.action.connect("activate", self.print_something)
       self.win.add_action(self.action)
-
-      #Menu
       menu = Gio.Menu.new()
       menu.append("Do Something", "win.something")
-
-      #popover
       self.popover = Gtk.PopoverMenu()
       self.popover.set_menu_model(menu)
+      self.info_btn.set_popover(self.popover)
 
-      self.ham = Gtk.MenuButton()
-      self.ham.set_popover(self.popover)
-      self.ham.set_icon_name("open-menu-symbolic")
+      ##Set Icons of Widgets
+      self.tab_btn.set_icon_name("tab-new-symbolic")
+      self.info_btn.set_icon_name("open-menu-symbolic")
+      self.refresh_btn.set_icon_name("view-refresh-symbolic")
+      self.back_btn.set_icon_name("go-previous-symbolic")
+      self.forward_btn.set_icon_name("go-next-symbolic")
 
-      self.header.pack_end(self.ham)
+      ##Connect Widgets
+      self.search.connect("activate", self.on_search)
+      self.action.connect("activate", self.print_something)
+      self.back_btn.connect('clicked', self.go_back)
+      self.forward_btn.connect('clicked', self.go_forward)
+      self.refresh_btn.connect('clicked', self.refresh_page)
+
+      ##Add Button to Header
+      self.header.pack_end(self.info_btn)
+      self.header.pack_start(self.back_btn)
+      self.header.pack_start(self.forward_btn)
+      self.header.pack_start(self.refresh_btn)
+      self.header.pack_start(self.tab_btn)
       self.header.pack_start(self.search)
 
-      self.web = WebKit2.WebView()
-      self.web.load_uri("https://duckduckgo.com")
-      self.web.connect('notify::estimated-load-progress', self.change_url)
-      self.win.set_child(self.web)
+      ##Create Web Pages
+      self.web_page = WebKit2.WebView()
+      self.web_page.load_uri("https://duckduckgo.com")
+      self.web_page.connect('notify::estimated-load-progress', self.change_url)
+      self.win.set_child(self.web_page)
       self.win.present()
 
   def run(self):
@@ -59,17 +76,27 @@ class MyApp(Adw.Application):
   def on_search(self, add):
       add = self.search.get_text()
       if add.startswith("https://") or add.startswith("http://"):
-          self.web.load_uri(add)
+          self.web_page.load_uri(add)
       else:
           add = "https://" + add
-          self.web.load_uri(add)
+          self.web_page.load_uri(add)
 
   def print_something(self, action, param):
       print("somthing")
 
   def change_url(self, widget, frame):
-      uri = self.web.get_uri()
+      uri = self.web_page.get_uri()
       self.search.set_text(uri)
+
+  def go_back(self, widget):
+      self.web_page.go_back()
+
+  def go_forward(self, widget):
+      self.web_page.go_forward()
+
+  def refresh_page(self, widget):
+      self.web_page.reload()
+
 
 app = MyApp()
 app.run()
