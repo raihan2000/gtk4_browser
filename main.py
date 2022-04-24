@@ -27,6 +27,7 @@ class MyApp(Adw.Application):
       self.forward_btn = Gtk.Button(label="Forward")
       self.search = Gtk.SearchEntry()
       self.info_btn = Gtk.MenuButton()
+      self.notebook = Gtk.Notebook()
 
       ##Add Header
       self.header = Gtk.HeaderBar()
@@ -54,6 +55,7 @@ class MyApp(Adw.Application):
       self.back_btn.connect('clicked', self.go_back)
       self.forward_btn.connect('clicked', self.go_forward)
       self.refresh_btn.connect('clicked', self.refresh_page)
+      self.tab_btn.connect("clicked", self.new_page)
 
       ##Add Button to Header
       self.header.pack_end(self.info_btn)
@@ -63,11 +65,7 @@ class MyApp(Adw.Application):
       self.header.pack_start(self.tab_btn)
       self.header.pack_start(self.search)
 
-      ##Create Web Pages
-      self.web_page = WebKit2.WebView()
-      self.web_page.load_uri("https://duckduckgo.com")
-      self.web_page.connect('notify::estimated-load-progress', self.change_url)
-      self.win.set_child(self.web_page)
+      self.win.set_child(self.notebook)
       self.win.present()
 
   def run(self):
@@ -96,6 +94,25 @@ class MyApp(Adw.Application):
 
   def refresh_page(self, widget):
       self.web_page.reload()
+
+  def new_page(self,button):
+      self.web_page = WebKit2.WebView()
+      self.web_page.load_uri("https://duckduckgo.com")
+      self.web_page.connect('notify::estimated-load-progress', self.change_url)
+
+      self.newpage = Gtk.ScrolledWindow()
+      self.newpage.set_child(self.web_page)
+      self.box = Gtk.Box()
+      self.title = Gtk.Label(label="New Tab")
+      self.close_btn = Gtk.Button(label="New Tab")
+      self.close_btn.set_icon_name("window-close-symbolic")
+      self.close_btn.connect("clicked", self.on_tab_close)
+      self.box.append(self.title)
+      self.box.append(self.close_btn)
+      self.notebook.append_page(self.newpage,self.box)
+
+  def on_tab_close(self,button):
+      self.notebook.remove_page(self.notebook.get_current_page())
 
 
 app = MyApp()
