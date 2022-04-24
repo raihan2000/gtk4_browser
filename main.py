@@ -14,11 +14,13 @@ class MyApp(Adw.Application):
   def __init__(self):
       self.app = Adw.Application(application_id=app_id)
       self.app.connect('activate', self.on_activate)
-
+      self.app.connect('activate', self.new_page)
       GLib.set_application_name(app_title)
+      self.count = 0
 
   def on_activate(self, app):
       self.win = Gtk.ApplicationWindow(application=app)
+      self.win.set_default_size(600, 600)
 
       ##Create Widgets for Header
       self.tab_btn = Gtk.Button(label="Tab")
@@ -63,7 +65,7 @@ class MyApp(Adw.Application):
       self.header.pack_start(self.forward_btn)
       self.header.pack_start(self.refresh_btn)
       self.header.pack_start(self.tab_btn)
-      self.header.pack_start(self.search)
+      self.header.pack_end(self.search)
 
       self.win.set_child(self.notebook)
       self.win.present()
@@ -73,11 +75,24 @@ class MyApp(Adw.Application):
 
   def on_search(self, add):
       add = self.search.get_text()
-      if add.startswith("https://") or add.startswith("http://"):
+      if add.startswith("https://") or add.startswith("http://") or add.startswith("https://www.") or add.startswith("http://www."):
           self.web_page.load_uri(add)
       else:
-          add = "https://" + add
-          self.web_page.load_uri(add)
+          if add.endswith(".com") or add.endswith(".in") or add.endswith(".org"):
+              add = "https://www." + add
+              self.web_page.load_uri(add)
+          else:
+              if self.word_in(add):
+                  add.replace(" ", "+")
+                  add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
+                  self.web_page.load_uri(add)
+              else:
+                  add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
+                  self.web_page.load_uri(add)
+
+  def word_in(self,s):
+      return " " not in s
+
 
   def print_something(self, action, param):
       print("somthing")
@@ -110,10 +125,11 @@ class MyApp(Adw.Application):
       self.box.append(self.title)
       self.box.append(self.close_btn)
       self.notebook.append_page(self.newpage,self.box)
+      self.count += 1
 
   def on_tab_close(self,button):
       self.notebook.remove_page(self.notebook.get_current_page())
-
+      self.count -= 1
 
 app = MyApp()
 app.run()
