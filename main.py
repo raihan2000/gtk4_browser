@@ -90,7 +90,9 @@ class MyApp(Adw.Application):
              self.web_page.load_uri(add)
 
   def check_domain(self,dom):
-      if dom is not None and dom != '':
+
+      symbols = ('~','`','!','@','#','$','%','^','&','*','(',')','-','_','+','=',':',';',',','<','>','.','/','?')
+      if dom is not None and dom != '' and not dom.startswith(symbols):
          details = whois.whois(dom)
          if details.domain_name is not None:
             return True
