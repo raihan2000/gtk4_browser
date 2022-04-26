@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys
+import sys, whois
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -77,18 +77,25 @@ class MyApp(Adw.Application):
       add = self.search.get_text()
       if add.startswith("https://") or add.startswith("http://") or add.startswith("https://www.") or add.startswith("http://www."):
           self.web_page.load_uri(add)
+      elif self.check_domain(add):
+          add = "https://" + add
+          self.web_page.load_uri(add)
       else:
-          if add.endswith(".com") or add.endswith(".in") or add.endswith(".org"):
-              add = "https://www." + add
-              self.web_page.load_uri(add)
+          if self.word_in(add):
+             add.replace(" ", "+")
+             add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
+             self.web_page.load_uri(add)
           else:
-              if self.word_in(add):
-                  add.replace(" ", "+")
-                  add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
-                  self.web_page.load_uri(add)
-              else:
-                  add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
-                  self.web_page.load_uri(add)
+             add = "https://duckduckgo.com/?q="+add+"&t=h_&ia=web"
+             self.web_page.load_uri(add)
+
+  def check_domain(self,dom):
+      if dom is not None and dom != '':
+         details = whois.whois(dom)
+         if details.domain_name is not None:
+            return True
+         else:
+            return False
 
   def word_in(self,s):
       return " " not in s
